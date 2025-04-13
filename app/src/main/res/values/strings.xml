@@ -14,7 +14,10 @@
     <string name="menu_stock_inputs">輸入</string>
     <string name="menu_stock_outputs">輸出</string>
 
-    <string name="symbol_hint">Asset name (e.g., amd, QQQ)</string>
+    <string name="Category">請選擇資產類別：</string>
     <string name="symbol">請輸入標的：</string>
+    <string name="symbol_hint">Asset name (e.g., amd, QQQ)</string>
+    <string name="amount">請輸入您擁有的數量：</string>
+    <string name="amount_hint">Amount (e.g., 20, 100)</string>
 
 </resources>
