@@ -22,4 +22,16 @@
         android:name="tw.edu.niu.investment_android.ui.slideshow.SlideshowFragment"
         android:label="@string/menu_slideshow"
         tools:layout="@layout/fragment_slideshow" />
+    <fragment
+        android:id="@+id/nav_inputs"
+        android:name="tw.edu.niu.investment_android.ui.inputs.InputsFragment"
+        android:label="@string/menu_stock_inputs"
+        tools:layout="@layout/fragment_inputs" />
+    <fragment
+        android:id="@+id/nav_outputs"
+        android:name="tw.edu.niu.investment_android.ui.outputs.OutputsFragment"
+        android:label="@string/menu_stock_outputs"
+        tools:layout="@layout/fragment_outputs" />
+
+
 </navigation>

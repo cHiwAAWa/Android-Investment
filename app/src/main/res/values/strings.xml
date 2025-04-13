@@ -11,6 +11,6 @@
     <string name="menu_gallery">Gallery</string>
     <string name="menu_slideshow">Slideshow</string>
 
-    <string name="stock_inputs">輸入</string>
-    <string name="stock_outputs">輸出</string>
+    <string name="menu_stock_inputs">輸入</string>
+    <string name="menu_stock_outputs">輸出</string>
 </resources>
