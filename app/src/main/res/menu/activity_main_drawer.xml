@@ -22,7 +22,7 @@
             android:title="@string/menu_stock_inputs" />
         <item
             android:id="@+id/nav_outputs"
-            android:icon="@drawable/ic_menu_optputs"
+            android:icon="@drawable/ic_menu_outputs"
             android:title="@string/menu_stock_outputs" />
     </group>
 </menu>
