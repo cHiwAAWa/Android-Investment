@@ -1,8 +1,3 @@
----
-title: README
-
----
-
 # README: portfolio.toml 讀取與寫入功能
 
 ## 簡述
