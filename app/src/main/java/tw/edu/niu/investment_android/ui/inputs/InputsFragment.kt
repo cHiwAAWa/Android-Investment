@@ -32,10 +32,9 @@ class InputsFragment : Fragment() {
         _binding = FragmentInputsBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val textView: TextView = binding.textInputs
-        inputsViewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
-        }
+//        inputsViewModel.text.observe(viewLifecycleOwner) {
+//            textView.text = it
+//            }
 
         // 設定 Spinner（下拉選單）
         val options = listOf("US Stock", "US ETF", "TW Stock", "TW ETF", "Crypto")

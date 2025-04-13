@@ -13,4 +13,8 @@
 
     <string name="menu_stock_inputs">輸入</string>
     <string name="menu_stock_outputs">輸出</string>
+
+    <string name="symbol_hint">Asset name (e.g., amd, QQQ)</string>
+    <string name="symbol">請輸入標的：</string>
+
 </resources>
