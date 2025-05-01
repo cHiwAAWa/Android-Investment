@@ -5,37 +5,43 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import tw.edu.niu.investment_android.databinding.FragmentOutputsBinding
 import java.io.File
+import android.app.AlertDialog
+import android.widget.EditText
+import java.io.FileWriter
 
 class OutputsFragment : Fragment() {
 
     private var _binding: FragmentOutputsBinding? = null
     private val binding get() = _binding!!
+    private lateinit var assetAdapter: AssetAdapter
+    private val assets = mutableListOf<Asset>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val outputsViewModel =
-            ViewModelProvider(this).get(OutputsViewModel::class.java)
-
         _binding = FragmentOutputsBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
+        // 載入資產資料
+        loadAssetsFromToml()
+
         // 設置 RecyclerView
         binding.recyclerViewOutputs.layoutManager = LinearLayoutManager(requireContext())
-        val assets = loadAssetsFromToml()
-        binding.recyclerViewOutputs.adapter = AssetAdapter(assets)
+        assetAdapter = AssetAdapter(assets) { asset, position ->
+            showEditDialog(asset, position)
+        }
+        binding.recyclerViewOutputs.adapter = assetAdapter
 
         return root
     }
 
-    private fun loadAssetsFromToml(): List<Asset> {
-        val assets = mutableListOf<Asset>()
+    private fun loadAssetsFromToml() {
+        assets.clear()
         val file = File(requireContext().filesDir, "portfolio.toml")
 
         if (file.exists()) {
@@ -45,14 +51,51 @@ class OutputsFragment : Fragment() {
                     currentCategory = line.trim().removeSurrounding("[", "]")
                 } else if (line.contains("=")) {
                     val (symbol, amount) = line.split("=").map { it.trim() }
-                    // 移除 TOML 中可能的引號（例如 "2330.TW"）
                     val cleanSymbol = symbol.removeSurrounding("\"")
                     assets.add(Asset(currentCategory, cleanSymbol, amount))
                 }
             }
         }
+    }
 
-        return assets
+    private fun showEditDialog(asset: Asset, position: Int) {
+        val editText = EditText(requireContext()).apply {
+            setText(asset.amount)
+        }
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("修改資產數量")
+            .setView(editText)
+            .setPositiveButton("確認") { _, _ ->
+                val newAmount = editText.text.toString().trim()
+                if (newAmount.isNotEmpty()) {
+                    assets[position] = asset.copy(amount = newAmount)
+                    assetAdapter.notifyItemChanged(position)
+                    updatePortfolioToml()
+                }
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+
+    private fun updatePortfolioToml() {
+        val file = File(requireContext().filesDir, "portfolio.toml")
+        val groupedAssets = assets.groupBy { it.category }
+
+        FileWriter(file).use { writer ->
+            groupedAssets.forEach { (category, assetList) ->
+                writer.write("[$category]\n")
+                assetList.forEach { asset ->
+                    val amount = asset.amount.toDoubleOrNull()
+                    if (amount != null) {
+                        writer.write("${asset.symbol} = $amount\n")
+                    } else {
+                        writer.write("${asset.symbol} = \"${asset.amount}\"\n")
+                    }
+                }
+                writer.write("\n")
+            }
+        }
     }
 
     override fun onDestroyView() {
