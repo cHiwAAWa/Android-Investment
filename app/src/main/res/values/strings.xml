@@ -11,8 +11,8 @@
     <string name="menu_gallery">Gallery</string>
     <string name="menu_slideshow">Slideshow</string>
 
-    <string name="menu_stock_inputs">輸入</string>
-    <string name="menu_stock_outputs">輸出</string>
+    <string name="menu_stock_inputs">輸入資產標的與數量</string>
+    <string name="menu_stock_outputs">輸出即時資產列表</string>
 
     <string name="Category">請選擇資產類別：</string>
     <string name="symbol">請輸入標的：</string>
