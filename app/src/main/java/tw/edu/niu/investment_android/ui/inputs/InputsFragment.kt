@@ -39,16 +39,26 @@ class InputsFragment : Fragment() {
         binding.btnAdd.setOnClickListener {
             val category = binding.inputSpinner.selectedItem.toString()
             val symbol = binding.inputAssetName.text.toString().trim()
-            val amount = binding.inputAmount.text.toString().trim()
+            val amountStr = binding.inputAmount.text.toString().trim()
 
             // 驗證輸入
-            if (symbol.isEmpty() || amount.isEmpty()) {
-                Toast.makeText(requireContext(), "請輸入標的名稱和數量", Toast.LENGTH_SHORT).show()
+            if (symbol.isEmpty()) {
+                Toast.makeText(requireContext(), "請輸入標的名稱", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (amountStr.isEmpty()) {
+                Toast.makeText(requireContext(), "請輸入數量", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            // 驗證數量是否為有效的數字（支援小數）
+            val amount = amountStr.toDoubleOrNull()
+            if (amount == null) {
+                Toast.makeText(requireContext(), "數量必須是有效的數字（支援小數，如 0.5）", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             // 將輸入資料轉換為指定格式並儲存
-            saveToFile(category, symbol, amount)
+            saveToFile(category, symbol, amountStr)
         }
 
         return root
@@ -66,7 +76,7 @@ class InputsFragment : Fragment() {
                 else -> return
             }
 
-            // 定義檔案路徑（使用 portfolio.toml）
+            // 定義檔案路徑
             val file = File(requireContext().filesDir, "portfolio.toml")
             val data = mutableMapOf<String, MutableList<Pair<String, String>>>()
 
@@ -78,7 +88,6 @@ class InputsFragment : Fragment() {
                         data[currentHeader] = mutableListOf()
                     } else if (line.contains("=")) {
                         val (sym, amt) = line.split("=").map { it.trim() }
-                        // TOML 要求數字格式（不加引號），檢查 amount 是否為數字
                         data[data.keys.last()]?.add(sym to amt)
                     }
                 }
@@ -88,7 +97,6 @@ class InputsFragment : Fragment() {
             if (!data.containsKey(categoryHeader)) {
                 data[categoryHeader] = mutableListOf()
             }
-            // 檢查是否已存在相同的 symbol，若存在則更新數量
             val existingEntry = data[categoryHeader]?.indexOfFirst { it.first == symbol }
             if (existingEntry != null && existingEntry >= 0) {
                 data[categoryHeader]?.set(existingEntry, symbol to amount)
@@ -101,11 +109,11 @@ class InputsFragment : Fragment() {
                 data.forEach { (header, entries) ->
                     writer.write("[$header]\n")
                     entries.forEach { (sym, amt) ->
-                        // TOML 中數字不需要引號，檢查是否為數字
+                        // TOML 中數字不需要引號，檢查 amount 是否為數字
                         if (amt.toDoubleOrNull() != null) {
                             writer.write("$sym = $amt\n")
                         } else {
-                            writer.write("$sym = \"$amt\"\n") // 如果不是數字，加引號
+                            writer.write("$sym = \"$amt\"\n")
                         }
                     }
                     writer.write("\n")
