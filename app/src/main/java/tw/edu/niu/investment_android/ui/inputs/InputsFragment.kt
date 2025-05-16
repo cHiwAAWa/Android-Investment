@@ -138,8 +138,8 @@ class InputsFragment : Fragment() {
         }
     }
     private fun uploadFileToServer(file: File) {
-        // 假設 Tailscale VM IP 為 100.64.1.10
-        val serverUrl = "http://100.64.1.10:3030/upload"
+        // 假設 Tailscale VM IP 為 100.79.72.71
+        val serverUrl = "http://100.79.72.71:3030/upload"
         val mediaType = "application/toml".toMediaTypeOrNull()
         val requestBody = RequestBody.create(mediaType, file)
 
