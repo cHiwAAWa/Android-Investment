@@ -11,6 +11,9 @@ import java.io.File
 import android.app.AlertDialog
 import android.widget.EditText
 import java.io.FileWriter
+import okhttp3.*
+import okio.ByteString
+import java.util.concurrent.TimeUnit
 
 class OutputsFragment : Fragment() {
 
@@ -18,6 +21,10 @@ class OutputsFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var assetAdapter: AssetAdapter
     private val assets = mutableListOf<Asset>()
+    private var webSocket: WebSocket? = null
+    private val okHttpClient = OkHttpClient.Builder()
+        .readTimeout(0, TimeUnit.MILLISECONDS) // 無限等待，適合串流
+        .build()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,7 +44,51 @@ class OutputsFragment : Fragment() {
         }
         binding.recyclerViewOutputs.adapter = assetAdapter
 
+        // 連接到 WebSocket
+        connectWebSocket()
+
         return root
+    }
+
+    private fun connectWebSocket() {
+        // 假設 Tailscale VM IP 為 100.79.72.71
+        val wsUrl = "ws://100.79.72.71:3030/ws"
+        val request = Request.Builder()
+            .url(wsUrl)
+            .build()
+
+        webSocket = okHttpClient.newWebSocket(request, object : WebSocketListener() {
+            override fun onOpen(webSocket: WebSocket, response: Response) {
+                requireActivity().runOnUiThread {
+                    binding.tvStreamData.text = "WebSocket 已連線"
+                }
+            }
+
+            override fun onMessage(webSocket: WebSocket, text: String) {
+                requireActivity().runOnUiThread {
+                    binding.tvStreamData.text = "收到訊息：$text"
+                }
+            }
+
+            override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
+                requireActivity().runOnUiThread {
+                    binding.tvStreamData.text = "收到二進制訊息：${bytes.hex()}"
+                }
+            }
+
+            override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+                webSocket.close(1000, null)
+                requireActivity().runOnUiThread {
+                    binding.tvStreamData.text = "WebSocket 關閉：$reason"
+                }
+            }
+
+            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                requireActivity().runOnUiThread {
+                    binding.tvStreamData.text = "WebSocket 錯誤：${t.message}"
+                }
+            }
+        })
     }
 
     private fun loadAssetsFromToml() {
@@ -100,6 +151,7 @@ class OutputsFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        webSocket?.close(1000, "Fragment destroyed")
         _binding = null
     }
 }

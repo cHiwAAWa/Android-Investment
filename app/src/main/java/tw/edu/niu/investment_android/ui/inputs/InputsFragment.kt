@@ -2,6 +2,8 @@ package tw.edu.niu.investment_android.ui.inputs
 
 import android.R
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,11 +14,15 @@ import androidx.lifecycle.ViewModelProvider
 import tw.edu.niu.investment_android.databinding.FragmentInputsBinding
 import java.io.File
 import java.io.FileWriter
+import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import java.io.IOException
 
 class InputsFragment : Fragment() {
 
     private var _binding: FragmentInputsBinding? = null
     private val binding get() = _binding!!
+    private val okHttpClient = OkHttpClient()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -124,9 +130,41 @@ class InputsFragment : Fragment() {
             // 清空輸入欄位
             binding.inputAssetName.text.clear()
             binding.inputAmount.text.clear()
+
+            // 上傳檔案到服務器
+            uploadFileToServer(file)
         } catch (e: Exception) {
             Toast.makeText(requireContext(), "儲存失敗: ${e.message}", Toast.LENGTH_SHORT).show()
         }
+    }
+    private fun uploadFileToServer(file: File) {
+        // 假設 Tailscale VM IP 為 100.64.1.10
+        val serverUrl = "http://100.64.1.10:3030/upload"
+        val mediaType = "application/toml".toMediaTypeOrNull()
+        val requestBody = RequestBody.create(mediaType, file)
+
+        val request = Request.Builder()
+            .url(serverUrl)
+            .post(requestBody)
+            .build()
+
+        okHttpClient.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                requireActivity().runOnUiThread {
+                    Toast.makeText(requireContext(), "上傳失敗: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                requireActivity().runOnUiThread {
+                    if (response.isSuccessful) {
+                        Toast.makeText(requireContext(), "檔案上傳成功", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(requireContext(), "上傳失敗: ${response.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        })
     }
 
     override fun onDestroyView() {
