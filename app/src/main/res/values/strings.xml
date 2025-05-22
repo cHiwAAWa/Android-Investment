@@ -9,10 +9,10 @@
 
     <string name="menu_home">首頁</string>
     <string name="menu_gallery">價格波動</string>
-    <string name="menu_slideshow">K 線圖</string>
+    <string name="menu_slideshow">及時資產總價值</string>
 
     <string name="menu_stock_inputs">輸入資產標的與數量</string>
-    <string name="menu_stock_outputs">輸出即時資產總價值</string>
+    <string name="menu_stock_outputs">我的資產列表</string>
 
     <string name="Category">請選擇資產類別：</string>
     <string name="symbol">請輸入標的：</string>
