@@ -17,6 +17,7 @@ import java.io.FileWriter
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import java.io.IOException
+import java.util.Locale
 
 class InputsFragment : Fragment() {
 
@@ -37,9 +38,9 @@ class InputsFragment : Fragment() {
 
         // 設定 Spinner（下拉選單）
         val options = listOf("US Stock", "US ETF", "TW Stock", "TW ETF", "Crypto")
-        val adapter = ArrayAdapter(requireContext(), R.layout.simple_spinner_item, options)
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, options)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.inputSpinner.adapter = adapter
+        binding.inputSpinner?.adapter = adapter
 
         // 設定「確認」按鈕點擊事件
         binding.btnAdd.setOnClickListener {
@@ -59,7 +60,11 @@ class InputsFragment : Fragment() {
             // 驗證數量是否為有效的數字（支援小數）
             val amount = amountStr.toDoubleOrNull()
             if (amount == null) {
-                Toast.makeText(requireContext(), "數量必須是有效的數字（支援小數，如 0.5）", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "數量必須是有效的數字（支援小數，如 0.5）",
+                    Toast.LENGTH_SHORT
+                ).show()
                 return@setOnClickListener
             }
 
@@ -86,7 +91,7 @@ class InputsFragment : Fragment() {
             val file = File(requireContext().filesDir, "portfolio.toml")
             val data = mutableMapOf<String, MutableList<Pair<String, String>>>()
 
-            // 如果檔案存在，讀取現有資料
+            // 如果檔案存在，讀取現有資料，並將資產名稱轉為大寫
             if (file.exists()) {
                 file.readLines().forEach { line ->
                     if (line.startsWith("[")) {
@@ -94,20 +99,26 @@ class InputsFragment : Fragment() {
                         data[currentHeader] = mutableListOf()
                     } else if (line.contains("=")) {
                         val (sym, amt) = line.split("=").map { it.trim() }
-                        data[data.keys.last()]?.add(sym to amt)
+                        val cleanSym = sym.removeSurrounding("\"").uppercase(Locale.getDefault()) // 轉為大寫
+                        data[data.keys.last()]?.add(cleanSym to amt)
                     }
                 }
             }
+
+            // 將新輸入的資產名稱轉為大寫
+            val upperSymbol = symbol.uppercase(Locale.getDefault())
 
             // 添加新資料
             if (!data.containsKey(categoryHeader)) {
                 data[categoryHeader] = mutableListOf()
             }
-            val existingEntry = data[categoryHeader]?.indexOfFirst { it.first == symbol }
+            val existingEntry = data[categoryHeader]?.indexOfFirst { it.first == upperSymbol }
             if (existingEntry != null && existingEntry >= 0) {
-                data[categoryHeader]?.set(existingEntry, symbol to amount)
+                // 更新現有資產的數量
+                data[categoryHeader]?.set(existingEntry, upperSymbol to amount)
             } else {
-                data[categoryHeader]?.add(symbol to amount)
+                // 添加新資產
+                data[categoryHeader]?.add(upperSymbol to amount)
             }
 
             // 寫入檔案（TOML 格式）
@@ -137,6 +148,7 @@ class InputsFragment : Fragment() {
             Toast.makeText(requireContext(), "儲存失敗: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
+
     private fun uploadFileToServer(file: File) {
         // 假設 Tailscale VM IP 為 100.79.72.71
         val serverUrl = "http://100.79.72.71:3030/upload"
