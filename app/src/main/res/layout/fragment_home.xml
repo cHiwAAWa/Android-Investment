@@ -1,22 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.home.HomeFragment">
+    android:fillViewport="true">
 
-    <TextView
-        android:id="@+id/text_home"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:textAlignment="center"
-        android:textSize="20sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- 主標題 -->
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="側邊欄功能說明"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:paddingBottom="12dp"/>
+
+        <!-- 2. 價格波動 -->
+        <TextView
+            android:id="@+id/tvSection2Title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="1. 價格波動"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:paddingTop="8dp"/>
+        <TextView
+            android:id="@+id/tvSection2Desc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="計算最近1分鐘最高價與最低價與當前價差值的最大者，再除以當前價格，最後×100%。"
+            android:textSize="16sp"
+            android:paddingTop="4dp"/>
+
+        <!-- 3. 即時資產總價值 -->
+        <TextView
+            android:id="@+id/tvSection3Title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="2. 即時資產總價值"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:paddingTop="12dp"/>
+        <TextView
+            android:id="@+id/tvSection3Desc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="根據持有數量與即時市價，自動計算並顯示所有資產總額。"
+            android:textSize="16sp"
+            android:paddingTop="4dp"/>
+
+        <!-- 4. 輸入資產標的與數量 -->
+        <TextView
+            android:id="@+id/tvSection4Title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="3. 輸入資產標的與數量"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:paddingTop="12dp"/>
+        <TextView
+            android:id="@+id/tvSection4Desc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="選擇資產類別，輸入標的代號與數量，按「確認」儲存至 toml 檔案。"
+            android:textSize="16sp"
+            android:paddingTop="4dp"/>
+
+        <!-- 5. 我的資產列表 -->
+        <TextView
+            android:id="@+id/tvSection5Title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="4. 我的資產列表"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:paddingTop="12dp"/>
+        <TextView
+            android:id="@+id/tvSection5Desc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="列出所有已儲存資產，可修改或刪除。"
+            android:textSize="16sp"
+            android:paddingTop="4dp"/>
+
+    </LinearLayout>
+</ScrollView>
