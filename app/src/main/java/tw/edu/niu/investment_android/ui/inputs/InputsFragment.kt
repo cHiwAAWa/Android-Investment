@@ -114,8 +114,11 @@ class InputsFragment : Fragment() {
             }
             val existingEntry = data[categoryHeader]?.indexOfFirst { it.first == lowerSymbol }
             if (existingEntry != null && existingEntry >= 0) {
-                // 更新現有資產的數量
-                data[categoryHeader]?.set(existingEntry, lowerSymbol to amount)
+                // 更新現有資產的數量：將新舊數量相加
+                val oldAmount = data[categoryHeader]?.get(existingEntry)?.second?.toDoubleOrNull() ?: 0.0
+                val newAmount = amount.toDoubleOrNull() ?: 0.0
+                val totalAmount = (oldAmount + newAmount).toString()
+                data[categoryHeader]?.set(existingEntry, lowerSymbol to totalAmount)
             } else {
                 // 添加新資產
                 data[categoryHeader]?.add(lowerSymbol to amount)

@@ -11,6 +11,7 @@ import java.io.File
 import android.app.AlertDialog
 import android.widget.EditText
 import java.io.FileWriter
+import java.util.Locale
 
 class OutputsFragment : Fragment() {
     private var _binding: FragmentOutputsBinding? = null
@@ -49,7 +50,7 @@ class OutputsFragment : Fragment() {
                     currentCategory = line.trim().removeSurrounding("[", "]")
                 } else if (line.contains("=")) {
                     val (symbol, amount) = line.split("=").map { it.trim() }
-                    val cleanSymbol = symbol.removeSurrounding("\"")
+                    val cleanSymbol = symbol.removeSurrounding("\"").lowercase(Locale.getDefault()) // 轉為小寫
                     assets.add(Asset(currentCategory, cleanSymbol, amount))
                 }
             }
