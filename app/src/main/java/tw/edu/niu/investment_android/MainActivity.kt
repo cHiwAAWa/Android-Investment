@@ -11,6 +11,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.navigation.NavigationView
 import tw.edu.niu.investment_android.databinding.ActivityMainBinding
+import androidx.navigation.ui.NavigationUI
 
 class MainActivity : AppCompatActivity() {
 
@@ -28,12 +29,13 @@ class MainActivity : AppCompatActivity() {
         // 取得 NavController
         val navController = findNavController(R.id.nav_host_fragment_content_main)
 
-        // 將 FAB 按下時改為導向 InputsFragment（nav_inputs）
         binding.appBarMain.fab.setOnClickListener {
-            // 檢查目前是否已在 InputsFragment，避免重複導航
-            if (navController.currentDestination?.id != R.id.nav_inputs) {
-                navController.navigate(R.id.nav_inputs)
-            }
+            // 模擬點選側欄的 Inputs 項目
+            val menuItem = binding.navView.menu.findItem(R.id.nav_inputs)
+            // 交給 NavigationUI 處理跳轉和選單 Highlight
+            NavigationUI.onNavDestinationSelected(menuItem, navController)
+            // 同時關抽屜
+            binding.drawerLayout.closeDrawers()
         }
 
         val drawerLayout: DrawerLayout = binding.drawerLayout
