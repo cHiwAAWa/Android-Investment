@@ -99,26 +99,26 @@ class InputsFragment : Fragment() {
                         data[currentHeader] = mutableListOf()
                     } else if (line.contains("=")) {
                         val (sym, amt) = line.split("=").map { it.trim() }
-                        val cleanSym = sym.removeSurrounding("\"").uppercase(Locale.getDefault()) // 轉為大寫
+                        val cleanSym = sym.removeSurrounding("\"").lowercase(Locale.getDefault()) // 轉為小寫
                         data[data.keys.last()]?.add(cleanSym to amt)
                     }
                 }
             }
 
-            // 將新輸入的資產名稱轉為大寫
-            val upperSymbol = symbol.uppercase(Locale.getDefault())
+            // 將新輸入的資產名稱轉為小寫
+            val lowerSymbol = symbol.lowercase(Locale.getDefault())
 
             // 添加新資料
             if (!data.containsKey(categoryHeader)) {
                 data[categoryHeader] = mutableListOf()
             }
-            val existingEntry = data[categoryHeader]?.indexOfFirst { it.first == upperSymbol }
+            val existingEntry = data[categoryHeader]?.indexOfFirst { it.first == lowerSymbol }
             if (existingEntry != null && existingEntry >= 0) {
                 // 更新現有資產的數量
-                data[categoryHeader]?.set(existingEntry, upperSymbol to amount)
+                data[categoryHeader]?.set(existingEntry, lowerSymbol to amount)
             } else {
                 // 添加新資產
-                data[categoryHeader]?.add(upperSymbol to amount)
+                data[categoryHeader]?.add(lowerSymbol to amount)
             }
 
             // 寫入檔案（TOML 格式）
