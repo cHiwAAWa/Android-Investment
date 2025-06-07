@@ -30,8 +30,6 @@ class InputsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val inputsViewModel =
-            ViewModelProvider(this).get(InputsViewModel::class.java)
 
         _binding = FragmentInputsBinding.inflate(inflater, container, false)
         val root: View = binding.root
