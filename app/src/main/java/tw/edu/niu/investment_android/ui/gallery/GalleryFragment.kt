@@ -1,6 +1,7 @@
 package tw.edu.niu.investment_android.ui.gallery
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,145 +14,137 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 import java.util.Locale
 import kotlin.math.abs
-import kotlin.math.max
+import tw.edu.niu.investment_android.ui.gallery.Volatility
+import tw.edu.niu.investment_android.ui.gallery.VolatilityAdapter
 
 class GalleryFragment : Fragment() {
 
     private var _binding: FragmentGalleryBinding? = null
     private val binding get() = _binding!!
-    private val okHttpClient = OkHttpClient.Builder()
-        .readTimeout(0, TimeUnit.MILLISECONDS)
-        .build()
-    private var webSocket: WebSocket? = null
-    private val priceData = mutableMapOf<String, MutableList<Double>>()
-    private val volatilities = mutableListOf<Volatility>()
+
+    private val TAG = "GalleryFragment"
+
+    // symbol -> recent prices
+    private val priceData: MutableMap<String, MutableList<Double>> = mutableMapOf()
+    // 改為存放 Volatility 物件，而非 Pair
+    private val volatilities: MutableList<Volatility> = mutableListOf()
     private lateinit var volatilityAdapter: VolatilityAdapter
 
+    private var webSocket: WebSocket? = null
+
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
+        inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentGalleryBinding.inflate(inflater, container, false)
-        val root: View = binding.root
-
-        // 設置 RecyclerView
-        binding.recyclerViewVolatility.layoutManager = LinearLayoutManager(requireContext())
-        volatilityAdapter = VolatilityAdapter(volatilities)
-        binding.recyclerViewVolatility.adapter = volatilityAdapter
-
-        // 從 portfolio.toml 載入標的
-        loadSymbolsFromToml()
-
-        // 連接到 WebSocket
-        connectWebSocket()
-
-        // 每分鐘計算波動率
-        startVolatilityCalculation()
-
-        return root
+        return binding.root
     }
 
-    private fun loadSymbolsFromToml() {
-        val file = File(requireContext().filesDir, "portfolio.toml")
-        if (file.exists()) {
-            var currentCategory = ""
-            file.readLines().forEach { line ->
-                try {
-                    if (line.trim().startsWith("[")) {
-                        currentCategory = line.trim().removeSurrounding("[", "]")
-                    } else if (line.contains("=")) {
-                        val (symbol, _) = line.split("=").map { it.trim() }
-                        val cleanSymbol = symbol.removeSurrounding("\"").lowercase(Locale.getDefault())
-                        if (!priceData.containsKey(cleanSymbol)) {
-                            priceData[cleanSymbol] = mutableListOf()
-                        }
-                    }
-                } catch (e: Exception) {
-                    // 忽略無效行
-                }
-            }
-            binding.tvEmpty.visibility = if (priceData.isEmpty()) View.VISIBLE else View.GONE
-        } else {
-            binding.tvEmpty.visibility = View.VISIBLE
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // 初始化 RecyclerView：注意這裡用 binding.recyclerViewVolatility 或你 xml 中的 id
+        volatilityAdapter = VolatilityAdapter(volatilities)
+        binding.recyclerViewVolatility.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = volatilityAdapter
         }
+
+        loadSymbolsFromToml()
+        updateEmptyView()
+        connectWebSocket()
     }
 
     private fun connectWebSocket() {
-        val wsUrl = "ws://100.79.72.71:3030/ws"
-        val request = Request.Builder().url(wsUrl).build()
-        webSocket = okHttpClient.newWebSocket(request, object : WebSocketListener() {
-            override fun onOpen(webSocket: WebSocket, response: Response) {
+        val client = OkHttpClient.Builder()
+            .readTimeout(0, TimeUnit.MILLISECONDS)
+            .build()
+        val request = Request.Builder()
+            .url("ws://100.79.72.71:3030/ws")
+            .build()
+        webSocket = client.newWebSocket(request, object : WebSocketListener() {
+            override fun onOpen(ws: WebSocket, response: Response) {
                 requireActivity().runOnUiThread {
-                    binding.tvStatus.text = "WebSocket 已連線"
+                    binding.tvStatus.text = "連線已開啟"
+                    Log.d(TAG, "WebSocket opened")
                 }
             }
 
-            override fun onMessage(webSocket: WebSocket, text: String) {
+            override fun onMessage(ws: WebSocket, text: String) {
                 requireActivity().runOnUiThread {
-                    binding.tvStatus.text = "收到訊息"
-                    try {
-                        var currentCategory = ""
-                        text.lines().forEach { line ->
-                            if (line.trim().startsWith("[")) {
-                                currentCategory = line.trim().removeSurrounding("[", "]")
-                            } else if (line.contains("=")) {
-                                val (symbol, priceStr) = line.split("=").map { it.trim() }
-                                val cleanSymbol = symbol.removeSurrounding("\"").lowercase(Locale.getDefault())
-                                val price = priceStr.toDoubleOrNull()
-                                if (price != null && priceData.containsKey(cleanSymbol)) {
-                                    priceData[cleanSymbol]?.add(price)
-                                    if (priceData[cleanSymbol]?.size ?: 0 > 60) {
-                                        priceData[cleanSymbol]?.removeAt(0)
-                                    }
+                    Log.d(TAG, "Raw message: $text")
+                    binding.tvStatus.text = "收到訊息：$text"
+                    text.lines().forEach { line ->
+                        val trimmed = line.trim()
+                        if (trimmed.contains(":")) {
+                            val (sym, pricePart) = trimmed.split(":").map { it.trim() }
+                            val symbol = sym.lowercase(Locale.getDefault())
+                            val price = pricePart.removePrefix("$").toDoubleOrNull()
+                            if (price != null && priceData.containsKey(symbol)) {
+                                priceData[symbol]!!.apply {
+                                    add(price)
+                                    if (size > 60) removeAt(0)
                                 }
+                                Log.d(TAG, "Updated price for $symbol: $price")
+                            } else {
+                                Log.w(TAG, "Invalid price or unknown symbol: $trimmed")
                             }
                         }
-                        calculateVolatilities()
-                    } catch (e: Exception) {
-                        binding.tvStatus.text = "解析錯誤：${e.message}"
                     }
+                    calculateVolatilities()
                 }
             }
 
-            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+            override fun onFailure(ws: WebSocket, t: Throwable, response: Response?) {
                 requireActivity().runOnUiThread {
-                    binding.tvStatus.text = "WebSocket 錯誤：${t.message}"
+                    binding.tvStatus.text = "連線失敗：${t.message}"
+                    Log.e(TAG, "WebSocket failure", t)
                 }
             }
         })
     }
 
-    private fun startVolatilityCalculation() {
-        val handler = android.os.Handler(android.os.Looper.getMainLooper())
-        handler.postDelayed(object : Runnable {
-            override fun run() {
-                calculateVolatilities()
-                handler.postDelayed(this, 60000)
+    private fun loadSymbolsFromToml() {
+        try {
+            val file = File(requireContext().filesDir, "portfolio.toml")
+            if (!file.exists()) {
+                Log.w(TAG, "portfolio.toml not found")
+                return
             }
-        }, 1000)
+            file.forEachLine { line ->
+                val trimmed = line.trim()
+                if (trimmed.contains("=") && !trimmed.startsWith("[")) {
+                    val symbolRaw = trimmed.split("=").first().trim().removeSurrounding("\"")
+                    val symbol = symbolRaw.lowercase(Locale.getDefault())
+                    priceData.putIfAbsent(symbol, mutableListOf())
+                }
+            }
+            Log.d(TAG, "Loaded symbols: ${priceData.keys}")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load toml", e)
+        }
     }
 
     private fun calculateVolatilities() {
         volatilities.clear()
         priceData.forEach { (symbol, prices) ->
-            if (prices.isNotEmpty()) {
-                val currentPrice = prices.last()
-                val maxPrice = prices.maxOrNull() ?: currentPrice
-                val minPrice = prices.minOrNull() ?: currentPrice
-                val volatility = if (currentPrice != 0.0) {
-                    max(
-                        abs(currentPrice - maxPrice),
-                        abs(currentPrice - minPrice)
-                    ) / currentPrice * 100
-                } else 0.0
-                volatilities.add(Volatility(symbol, volatility))
+            if (prices.size >= 2) {
+                val mean = prices.average()
+                val variance = prices.map { (it - mean) * (it - mean) }.average()
+                val volatilityValue = abs(kotlin.math.sqrt(variance))
+                // 建立 Volatility 物件，而非 Pair
+                volatilities.add(Volatility(symbol, volatilityValue))
             }
         }
-        requireActivity().runOnUiThread {
-            binding.tvEmpty.visibility = if (volatilities.isEmpty()) View.VISIBLE else View.GONE
-            volatilityAdapter.notifyDataSetChanged()
-        }
+        volatilities.sortByDescending { it.volatility }
+        volatilityAdapter.notifyDataSetChanged()
+        updateEmptyView()
+    }
+
+    private fun updateEmptyView() {
+        binding.tvEmpty.visibility =
+            if (volatilities.isEmpty()) View.VISIBLE
+            else View.GONE
     }
 
     override fun onDestroyView() {
