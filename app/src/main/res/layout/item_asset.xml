@@ -48,7 +48,8 @@
         app:layout_constraintStart_toEndOf="@id/tv_amount"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toStartOf="@id/btn_delete"
-        app:layout_constraintHorizontal_weight="0.5" />
+        app:layout_constraintHorizontal_weight="0.5"
+        android:backgroundTint="#152E60"/>
 
     <Button
         android:id="@+id/btn_delete"
@@ -59,6 +60,7 @@
         app:layout_constraintStart_toEndOf="@id/btn_edit"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_weight="0.5" />
+        app:layout_constraintHorizontal_weight="0.5"
+        android:backgroundTint="#152E60"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
