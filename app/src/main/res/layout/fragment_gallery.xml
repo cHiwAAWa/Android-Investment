@@ -8,9 +8,10 @@
         android:id="@+id/tv_status"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:padding="8dp"
         android:text="正在連線..."
         android:textAlignment="center"
-        android:padding="8dp" />
+        android:textAppearance="@style/TextAppearance.AppCompat.Large" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewVolatility"
@@ -22,9 +23,10 @@
         android:id="@+id/tv_empty"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:padding="8dp"
         android:text="無數據可顯示"
-        android:visibility="gone"
         android:textAlignment="center"
-        android:padding="8dp" />
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:visibility="gone" />
 
 </LinearLayout>
